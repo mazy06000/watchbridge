@@ -1,0 +1,15 @@
+.nuxt
+.output
+.data
+.wrangler
+dist
+node_modules
+.env
+.env.*
+!.env.example
+coverage
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*

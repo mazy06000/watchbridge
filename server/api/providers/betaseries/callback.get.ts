@@ -6,9 +6,13 @@ export default defineEventHandler(async (event) => {
 
   const query = getQuery(event)
   const code = typeof query.code === 'string' ? query.code : ''
-  const state = typeof query.state === 'string' ? query.state : ''
+  const state = typeof query.state === 'string' && query.state
+    ? query.state
+    : readOAuthStateCookie(event)
   const oauthError = typeof query.error === 'string' ? query.error : ''
   const oauthErrorDescription = typeof query.error_description === 'string' ? query.error_description : ''
+
+  clearOAuthStateCookie(event)
 
   if (oauthError) {
     return callbackHtml({

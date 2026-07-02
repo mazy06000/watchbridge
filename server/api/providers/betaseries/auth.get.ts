@@ -8,6 +8,8 @@ export default defineEventHandler(async (event) => {
   const state = await createOAuthState({ provider: 'betaseries', origin }, String(config.oauthStateSecret || ''))
   const authorizeUrl = new URL('https://www.betaseries.com/authorize')
 
+  setOAuthStateCookie(event, state)
+
   authorizeUrl.searchParams.set('client_id', apiKey)
   authorizeUrl.searchParams.set('redirect_uri', redirectUri)
   authorizeUrl.searchParams.set('state', state)

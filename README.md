@@ -80,7 +80,7 @@ The project builds to `dist` with the Nitro `cloudflare_pages` preset.
 Suggested Pages project:
 
 - Project: `watchbridge`
-- Production URL: `https://watchbridge.pages.dev`
+- Production URL: `https://watchbridge.org`
 
 Cloudflare Pages settings:
 
@@ -88,6 +88,12 @@ Cloudflare Pages settings:
 - Build output directory: `dist`
 - Compatibility date: `2026-06-25`
 - Environment variables: the same `NUXT_*` variables listed above
+
+Production public base URL:
+
+```bash
+NUXT_PUBLIC_APP_BASE_URL=https://watchbridge.org
+```
 
 Direct deploy:
 
@@ -106,13 +112,13 @@ wrangler pages secret put NUXT_OAUTH_STATE_SECRET --project-name watchbridge
 The OAuth callback URL to register in the BetaSeries developer app is:
 
 ```txt
-https://watchbridge.pages.dev/api/providers/betaseries/callback
+https://watchbridge.org/api/providers/betaseries/callback
 ```
 
 Readiness endpoint:
 
 ```txt
-https://watchbridge.pages.dev/api/readiness
+https://watchbridge.org/api/readiness
 ```
 
 It reports only configuration key names and capability flags. It does not return secret values or user data.

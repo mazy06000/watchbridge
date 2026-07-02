@@ -25,7 +25,7 @@
             type="button"
             @click="activeStep = step.id"
           >
-            <span class="step-index">{{ step.index }}</span>
+            <span class="step-index">0{{ step.index }}</span>
             <span class="step-copy">
               <span class="step-title">{{ step.title }}</span>
               <span class="step-meta">{{ step.meta }}</span>
@@ -88,29 +88,42 @@
           </div>
 
           <div class="visual-panel" aria-label="Tracking provider transfer illustration">
-            <div class="provider-node source-node">
-              <span>Your tracking history</span>
-              <strong>TV Time</strong>
-              <em>GDPR export</em>
+            <div class="provider-flow-card">
+              <span class="flow-label">Input providers</span>
+              <strong>Bring history from any tracker</strong>
+              <div class="provider-logo-grid">
+                <div
+                  v-for="item in sourceProviderLogos"
+                  :key="`source-${item.id}`"
+                  class="provider-logo-chip"
+                >
+                  <img :src="item.logo" :alt="item.name" @error="handleProviderLogoError">
+                  <span>{{ item.name }}</span>
+                </div>
+              </div>
             </div>
 
-            <div class="bridge-core">
+            <div class="transfer-core">
               <LockKeyhole :size="20" />
-              <strong>Normalized library</strong>
-              <span>{{ transferPlan?.counts.total ?? 0 }} operations ready</span>
+              <span class="flow-label">WatchBridge core</span>
+              <strong>Normalize, match, review</strong>
+              <em>{{ transferPlan?.counts.total ?? 0 }} operations ready</em>
             </div>
 
-            <div class="provider-node destination-node">
-              <span>Your new home</span>
-              <strong>BetaSeries</strong>
-              <em>First connector</em>
-            </div>
-
-            <div class="future-connectors" aria-label="Future tracking providers">
-              <span>Trakt</span>
-              <span>Serializd</span>
-              <span>Simkl</span>
-              <span>Letterboxd</span>
+            <div class="provider-flow-card">
+              <span class="flow-label">Output providers</span>
+              <strong>Send it to the place you choose</strong>
+              <div class="provider-logo-grid">
+                <div
+                  v-for="item in destinationProviderLogos"
+                  :key="`destination-${item.id}`"
+                  class="provider-logo-chip"
+                  :class="{ 'is-active': item.id === selectedProviderId }"
+                >
+                  <img :src="item.logo" :alt="item.name" @error="handleProviderLogoError">
+                  <span>{{ item.name }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -129,20 +142,25 @@
                 <div class="dropzone-icon" aria-hidden="true">
                   <Archive :size="26" />
                 </div>
-                <h2>{{ library ? 'TV Time export loaded' : 'TV Time GDPR ZIP' }}</h2>
-                <p v-if="library">
-                  Parsed {{ summary.watchedEpisodes }} episodes, {{ summary.shows }} shows, {{ summary.watchedMovies }} watched movies, and {{ summary.movieList }} movie list rows.
-                </p>
-                <p v-else>
-                  Drop the ZIP here or select it from disk. Only the supported watch-history CSV files are read.
-                </p>
-                <div class="button-row">
-                  <button class="btn btn-primary" type="button" :disabled="isParsing" @click="fileInput?.click()">
-                    <UploadCloud :size="18" />
-                    {{ isParsing ? 'Parsing' : 'Choose ZIP' }}
-                  </button>
-                  <span v-if="parseError" class="badge badge-error">{{ parseError }}</span>
-                  <span v-else-if="library" class="badge badge-success">Ready</span>
+                <div class="dropzone-copy">
+                  <p class="dropzone-kicker">
+                    Source archive
+                  </p>
+                  <h2>{{ library ? 'TV Time export loaded' : 'TV Time GDPR ZIP' }}</h2>
+                  <p v-if="library">
+                    Parsed {{ summary.watchedEpisodes }} episodes, {{ summary.shows }} shows, {{ summary.watchedMovies }} watched movies, and {{ summary.movieList }} movie list rows.
+                  </p>
+                  <p v-else>
+                    Drop your TV Time GDPR export here, or choose the ZIP from disk. WatchBridge reads only the supported watch-history files in your browser.
+                  </p>
+                  <div class="button-row">
+                    <button class="btn btn-primary" type="button" :disabled="isParsing" @click="fileInput?.click()">
+                      <UploadCloud :size="18" />
+                      {{ isParsing ? 'Parsing' : 'Choose ZIP' }}
+                    </button>
+                    <span v-if="parseError" class="badge badge-error">{{ parseError }}</span>
+                    <span v-else-if="library" class="badge badge-success">Ready</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -163,11 +181,15 @@
               </label>
 
               <div class="provider-future" aria-label="Future destination providers">
-                <span>Trakt</span>
-                <span>Serializd</span>
-                <span>Simkl</span>
-                <span>Letterboxd</span>
-                <span>More soon</span>
+                <span
+                  v-for="item in connectorProviderLogos"
+                  :key="item.id"
+                  class="provider-mini-chip"
+                >
+                  <img :src="item.logo" :alt="item.name" @error="handleProviderLogoError">
+                  {{ item.name }}
+                </span>
+                <span class="provider-mini-chip provider-mini-placeholder">More soon</span>
               </div>
 
               <div class="alert" :class="{ 'alert-error': provider && !provider.configured }">
@@ -210,7 +232,7 @@
                 class="segment"
                 :class="{ 'is-active': previewMode === mode.id }"
                 type="button"
-                @click="previewMode = mode.id"
+                @click="setPreviewMode(mode.id)"
               >
                 {{ mode.label }}
               </button>
@@ -266,27 +288,105 @@
             <p>No export loaded.</p>
           </div>
 
-          <div v-else class="table-wrap mt-4">
-            <table>
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th>Source</th>
-                  <th>Target</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="row in previewRows" :key="row.id">
-                  <td>{{ row.title }}</td>
-                  <td>{{ row.source }}</td>
-                  <td>{{ row.target || 'Not matched' }}</td>
-                  <td>
-                    <span class="badge" :class="row.badgeClass">{{ row.status }}</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div v-else class="review-browser">
+            <div class="review-heading">
+              <div>
+                <p class="eyebrow">
+                  {{ previewMode === 'episodes' ? 'Grouped by show' : 'Preview' }}
+                </p>
+                <h3>
+                  {{ previewMode === 'episodes' ? `${episodeGroups.length} shows` : `${activePreviewTotal} rows` }}
+                </h3>
+              </div>
+              <p>
+                Showing {{ previewRangeStart }}-{{ previewRangeEnd }} of {{ activePreviewTotal }}
+              </p>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>{{ previewMode === 'episodes' ? 'Show' : 'Item' }}</th>
+                    <th>Source</th>
+                    <th>Target</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody v-if="previewMode === 'episodes'">
+                  <template v-for="group in paginatedEpisodeGroups" :key="group.id">
+                    <tr class="show-row">
+                      <td>
+                        <button class="show-toggle" type="button" @click="toggleEpisodeGroup(group.id)">
+                          <ChevronDown
+                            :size="18"
+                            class="show-toggle-icon"
+                            :class="{ 'is-open': isEpisodeGroupExpanded(group.id) }"
+                          />
+                          <span class="show-copy">
+                            <strong>{{ group.title }}</strong>
+                            <span class="show-stats">{{ group.total }} episodes · {{ group.matched }} matched</span>
+                          </span>
+                        </button>
+                      </td>
+                      <td>{{ group.latestWatchedAt }}</td>
+                      <td>{{ group.target || 'Not matched' }}</td>
+                      <td>
+                        <span class="badge" :class="group.badgeClass">{{ group.status }}</span>
+                      </td>
+                    </tr>
+                    <tr v-if="isEpisodeGroupExpanded(group.id)" class="episode-detail-row">
+                      <td colspan="4">
+                        <div class="episode-list">
+                          <div v-for="episode in group.rows" :key="episode.id" class="episode-row">
+                            <span class="episode-title">{{ episode.title }}</span>
+                            <span>{{ episode.source }}</span>
+                            <span>{{ episode.target || 'Not matched' }}</span>
+                            <span class="badge" :class="episode.badgeClass">{{ episode.status }}</span>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+                <tbody v-else>
+                  <tr v-for="row in paginatedPreviewRows" :key="row.id">
+                    <td>{{ row.title }}</td>
+                    <td>{{ row.source }}</td>
+                    <td>{{ row.target || 'Not matched' }}</td>
+                    <td>
+                      <span class="badge" :class="row.badgeClass">{{ row.status }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div v-if="totalPreviewPages > 1" class="pagination">
+              <button class="page-btn" type="button" :disabled="currentPreviewPage === 1" @click="setPreviewPage(currentPreviewPage - 1)">
+                <ChevronLeft :size="17" />
+                Previous
+              </button>
+              <div class="page-track" aria-label="Preview pages">
+                <button
+                  v-for="page in visiblePreviewPages"
+                  :key="page"
+                  class="page-number"
+                  :class="{ 'is-active': page === currentPreviewPage }"
+                  type="button"
+                  @click="setPreviewPage(page)"
+                >
+                  {{ page }}
+                </button>
+              </div>
+              <p class="page-summary">
+                Page {{ currentPreviewPage }} of {{ totalPreviewPages }}
+              </p>
+              <button class="page-btn" type="button" :disabled="currentPreviewPage === totalPreviewPages" @click="setPreviewPage(currentPreviewPage + 1)">
+                Next
+                <ChevronRight :size="17" />
+              </button>
+            </div>
           </div>
         </section>
 
@@ -342,6 +442,9 @@
 import {
   Archive,
   CheckCircle2,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Cloud,
   Database,
   KeyRound,
@@ -379,6 +482,18 @@ interface PreviewRow {
   badgeClass: string
 }
 
+interface EpisodePreviewGroup {
+  id: string
+  title: string
+  target?: string
+  status: string
+  badgeClass: string
+  latestWatchedAt: string
+  total: number
+  matched: number
+  rows: PreviewRow[]
+}
+
 interface LogLine {
   id: string
   status: string
@@ -390,9 +505,31 @@ interface ProvidersResponse {
   providers: ProviderDescriptor[]
 }
 
+interface ProviderLogoItem {
+  id: string
+  name: string
+  logo: string
+}
+
 const MATCH_SHOW_BATCH_SIZE = 8
 const MATCH_MOVIE_BATCH_SIZE = 20
 const IMPORT_BATCH_SIZE = 25
+const PREVIEW_PAGE_SIZE = 12
+
+const providerLogoRegistry: ProviderLogoItem[] = [
+  { id: 'tv-time', name: 'TV Time', logo: '/providers/tv-time.png' },
+  { id: 'betaseries', name: 'BetaSeries', logo: '/providers/betaseries.png' },
+  { id: 'trakt', name: 'Trakt', logo: '/providers/trakt.png' },
+  { id: 'serializd', name: 'Serializd', logo: '/providers/serializd.png' }
+]
+
+const sourceProviderLogos = providerLogoRegistry.filter((item) =>
+  ['tv-time', 'trakt', 'serializd'].includes(item.id)
+)
+const destinationProviderLogos = providerLogoRegistry.filter((item) =>
+  ['betaseries', 'trakt', 'serializd'].includes(item.id)
+)
+const connectorProviderLogos = providerLogoRegistry.filter((item) => item.id !== 'tv-time')
 
 const fallbackCapabilities = {
   watchedEpisodes: true,
@@ -412,6 +549,7 @@ const accessToken = ref('')
 const parseError = ref('')
 const activeStep = ref<StepId>('import')
 const previewMode = ref<PreviewMode>('episodes')
+const previewPage = ref(1)
 const isDragging = ref(false)
 const isParsing = ref(false)
 const isMatching = ref(false)
@@ -422,6 +560,7 @@ const showMatches = ref<ProviderShowMatch[]>([])
 const movieMatches = ref<ProviderMovieMatch[]>([])
 const importResults = ref<ImportResultLine[]>([])
 const logLines = ref<LogLine[]>([])
+const expandedEpisodeGroupIds = ref<Set<string>>(new Set())
 
 const provider = computed(() => providers.value.find((item) => item.id === selectedProviderId.value))
 const providerCapabilities = computed(() => provider.value?.capabilities ?? fallbackCapabilities)
@@ -499,10 +638,80 @@ const matchedMovieIds = computed(() => new Map(
     .map((movie) => [movie.sourceMovieId, movie.providerMovieId!])
 ))
 
+const showMatchesBySourceId = computed(() => new Map(
+  showMatches.value.map((show) => [show.sourceShowId, show])
+))
+
+const movieMatchesBySourceId = computed(() => new Map(
+  movieMatches.value.map((movie) => [movie.sourceMovieId, movie])
+))
+
 const matchedOperationCount = computed(() => buildProviderOperations().length)
 const canImport = computed(() =>
   Boolean(accessToken.value && !isMatching.value && !isImporting.value && matchedOperationCount.value > 0)
 )
+
+const episodeGroups = computed<EpisodePreviewGroup[]>(() => {
+  if (!library.value) {
+    return []
+  }
+
+  const groups = new Map<string, {
+    id: string
+    title: string
+    latestWatchedAt?: string
+    rows: PreviewRow[]
+  }>()
+
+  for (const episode of library.value.watchedEpisodes) {
+    const key = sourceShowKey(episode)
+    const showMatch = showMatchesBySourceId.value.get(key)
+    const existing = groups.get(key) ?? {
+      id: key,
+      title: episode.showTitle,
+      rows: []
+    }
+
+    existing.latestWatchedAt = maxIsoDate(existing.latestWatchedAt, episode.watchedAt)
+    existing.rows.push({
+      id: episode.id,
+      title: `S${episode.seasonNumber}E${episode.episodeNumber}`,
+      source: episode.watchedAt?.slice(0, 10) ?? 'TV Time episode',
+      target: showMatch?.providerTitle,
+      status: matchedEpisodeIds.value.has(episode.id) ? 'matched' : 'pending',
+      badgeClass: matchedEpisodeIds.value.has(episode.id) ? 'badge-success' : 'badge-warn'
+    })
+
+    groups.set(key, existing)
+  }
+
+  return [...groups.values()]
+    .map((group) => {
+      const showMatch = showMatchesBySourceId.value.get(group.id)
+      const matched = group.rows.filter((row) => row.status === 'matched').length
+      const hasError = showMatch?.status === 'error' || group.rows.some((row) => row.status === 'error')
+      const status = hasError
+        ? 'error'
+        : matched === group.rows.length
+          ? 'matched'
+          : matched > 0
+            ? 'partial'
+            : 'pending'
+
+      return {
+        id: group.id,
+        title: group.title,
+        target: showMatch?.providerTitle,
+        status,
+        badgeClass: hasError ? 'badge-error' : status === 'matched' ? 'badge-success' : 'badge-warn',
+        latestWatchedAt: group.latestWatchedAt?.slice(0, 10) ?? 'TV Time episode',
+        total: group.rows.length,
+        matched,
+        rows: [...group.rows].sort(compareEpisodeRows)
+      }
+    })
+    .sort((first, second) => first.title.localeCompare(second.title))
+})
 
 const previewRows = computed<PreviewRow[]>(() => {
   if (!library.value) {
@@ -525,12 +734,12 @@ const previewRows = computed<PreviewRow[]>(() => {
   }
 
   if (previewMode.value === 'movies') {
-    const rows = [
+    return [
       ...library.value.watchedMovies.map((movie) => ({
         id: movie.id,
         title: movie.title,
         source: movie.releaseDate ?? 'TV Time movie',
-        target: movieMatches.value.find((match) => match.sourceMovieId === movie.id)?.providerTitle,
+        target: movieMatchesBySourceId.value.get(movie.id)?.providerTitle,
         status: matchedMovieIds.value.has(movie.id) ? 'matched' : 'pending',
         badgeClass: matchedMovieIds.value.has(movie.id) ? 'badge-success' : 'badge-warn'
       })),
@@ -538,27 +747,47 @@ const previewRows = computed<PreviewRow[]>(() => {
         id: movie.id,
         title: movie.title,
         source: movie.state,
-        target: movieMatches.value.find((match) => match.sourceMovieId === movie.id)?.providerTitle,
+        target: movieMatchesBySourceId.value.get(movie.id)?.providerTitle,
         status: matchedMovieIds.value.has(movie.id) ? 'matched' : 'pending',
         badgeClass: matchedMovieIds.value.has(movie.id) ? 'badge-success' : 'badge-warn'
       }))
     ]
-    return rows.slice(0, 60)
   }
 
-  return library.value.watchedEpisodes.slice(0, 80).map((episode) => {
-    const showMatch = showMatches.value.find((match) =>
-      match.episodes.some((item) => item.sourceEpisodeId === episode.id)
-    )
-    return {
-      id: episode.id,
-      title: `${episode.showTitle} S${episode.seasonNumber}E${episode.episodeNumber}`,
-      source: episode.watchedAt?.slice(0, 10) ?? 'TV Time episode',
-      target: showMatch?.providerTitle,
-      status: matchedEpisodeIds.value.has(episode.id) ? 'matched' : 'pending',
-      badgeClass: matchedEpisodeIds.value.has(episode.id) ? 'badge-success' : 'badge-warn'
-    }
-  })
+  return []
+})
+
+const activePreviewTotal = computed(() =>
+  previewMode.value === 'episodes' ? episodeGroups.value.length : previewRows.value.length
+)
+
+const totalPreviewPages = computed(() =>
+  Math.max(1, Math.ceil(activePreviewTotal.value / PREVIEW_PAGE_SIZE))
+)
+
+const currentPreviewPage = computed(() =>
+  Math.min(previewPage.value, totalPreviewPages.value)
+)
+
+const previewSliceStart = computed(() => (currentPreviewPage.value - 1) * PREVIEW_PAGE_SIZE)
+const previewRangeStart = computed(() => activePreviewTotal.value === 0 ? 0 : previewSliceStart.value + 1)
+const previewRangeEnd = computed(() =>
+  Math.min(previewSliceStart.value + PREVIEW_PAGE_SIZE, activePreviewTotal.value)
+)
+
+const paginatedEpisodeGroups = computed(() =>
+  episodeGroups.value.slice(previewSliceStart.value, previewSliceStart.value + PREVIEW_PAGE_SIZE)
+)
+
+const paginatedPreviewRows = computed(() =>
+  previewRows.value.slice(previewSliceStart.value, previewSliceStart.value + PREVIEW_PAGE_SIZE)
+)
+
+const visiblePreviewPages = computed(() => {
+  const start = Math.max(1, currentPreviewPage.value - 2)
+  const end = Math.min(totalPreviewPages.value, start + 4)
+  const adjustedStart = Math.max(1, end - 4)
+  return Array.from({ length: end - adjustedStart + 1 }, (_, index) => adjustedStart + index)
 })
 
 onMounted(async () => {
@@ -574,6 +803,49 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   window.removeEventListener('message', handleAuthMessage)
 })
+
+function setPreviewMode(mode: PreviewMode): void {
+  previewMode.value = mode
+  previewPage.value = 1
+}
+
+function setPreviewPage(page: number): void {
+  previewPage.value = Math.min(Math.max(page, 1), totalPreviewPages.value)
+}
+
+function isEpisodeGroupExpanded(groupId: string): boolean {
+  return expandedEpisodeGroupIds.value.has(groupId)
+}
+
+function toggleEpisodeGroup(groupId: string): void {
+  const next = new Set(expandedEpisodeGroupIds.value)
+  if (next.has(groupId)) {
+    next.delete(groupId)
+  } else {
+    next.add(groupId)
+  }
+  expandedEpisodeGroupIds.value = next
+}
+
+function sourceShowKey(episode: NormalizedLibrary['watchedEpisodes'][number]): string {
+  return episode.source.showId
+    ? stableMediaId(['tvtime', 'show', episode.source.showId])
+    : `title-${episode.showTitle.toLowerCase()}`
+}
+
+function maxIsoDate(current: string | undefined, next: string | undefined): string | undefined {
+  if (!next) {
+    return current
+  }
+  if (!current) {
+    return next
+  }
+  return next > current ? next : current
+}
+
+function compareEpisodeRows(first: PreviewRow, second: PreviewRow): number {
+  return first.title.localeCompare(second.title, undefined, { numeric: true })
+}
 
 function handleAuthMessage(event: MessageEvent): void {
   if (event.origin !== window.location.origin) {
@@ -622,6 +894,8 @@ async function parseFile(file: File | undefined): Promise<void> {
     const { readTvTimeGdprZip } = await import('~~/infra/sources/tvtime-gdpr-reader')
     library.value = await readTvTimeGdprZip(file)
     activeStep.value = 'match'
+    setPreviewMode('episodes')
+    expandedEpisodeGroupIds.value = new Set()
     pushLog('success', `Loaded ${file.name}.`)
   } catch (error) {
     library.value = null
@@ -649,6 +923,11 @@ function connectProvider(): void {
 function disconnectProvider(): void {
   accessToken.value = ''
   pushLog('success', 'Provider disconnected.')
+}
+
+function handleProviderLogoError(event: Event): void {
+  const image = event.currentTarget as HTMLImageElement
+  image.hidden = true
 }
 
 async function matchLibrary(): Promise<void> {
@@ -739,6 +1018,8 @@ function resetWorkspace(): void {
   importResults.value = []
   logLines.value = []
   progress.value = 0
+  setPreviewMode('episodes')
+  expandedEpisodeGroupIds.value = new Set()
   resetMatches()
   activeStep.value = 'import'
 }
@@ -761,9 +1042,7 @@ function buildShowMatchRequests(source: NormalizedLibrary): ProviderShowMatchReq
   }
 
   for (const episode of source.watchedEpisodes) {
-    const key = episode.source.showId
-      ? stableMediaId(['tvtime', 'show', episode.source.showId])
-      : `title-${episode.showTitle.toLowerCase()}`
+    const key = sourceShowKey(episode)
     const existing = grouped.get(key) ?? {
       sourceShowId: key,
       title: episode.showTitle,

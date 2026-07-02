@@ -61,7 +61,7 @@
   }
 
   .rail {
-    @apply sticky top-3 z-30 grid gap-4 rounded-lg border border-bridge-line/80 bg-bridge-panel/85 p-4 shadow-bridge-card backdrop-blur-xl lg:grid-cols-[auto_1fr_auto] lg:items-center;
+    @apply sticky top-3 z-30 grid gap-4 border-b border-bridge-line/80 bg-bridge-panel/90 px-2 py-3 backdrop-blur-xl lg:grid-cols-[auto_1fr_auto] lg:items-center;
   }
 
   .brand {
@@ -69,7 +69,7 @@
   }
 
   .brand-mark {
-    @apply grid size-11 shrink-0 place-items-center overflow-hidden rounded-lg border border-bridge-green/15 bg-white shadow-sm;
+    @apply grid size-10 shrink-0 place-items-center overflow-hidden rounded-md border border-bridge-green/10 bg-white;
   }
 
   .brand-mark img {
@@ -85,19 +85,19 @@
   }
 
   .step-list {
-    @apply grid grid-cols-3 gap-2;
+    @apply flex flex-wrap items-center justify-center gap-x-7 gap-y-2;
   }
 
   .step-item {
-    @apply grid min-h-12 grid-cols-[2rem_1fr] items-center gap-2 rounded-lg border border-transparent bg-transparent p-2 text-left text-sm text-bridge-muted transition hover:border-bridge-green/15 hover:bg-white/65;
+    @apply flex min-h-9 items-center gap-2 rounded-none border-0 bg-transparent p-0 text-left text-sm text-bridge-muted transition;
   }
 
   .step-item.is-active {
-    @apply border-bridge-green/20 bg-white text-bridge-ink shadow-sm;
+    @apply bg-transparent text-bridge-ink shadow-none;
   }
 
   .step-index {
-    @apply grid size-8 place-items-center rounded-full bg-bridge-green text-xs font-black text-white;
+    @apply font-mono text-xs font-black text-bridge-green;
   }
 
   .step-copy {
@@ -105,7 +105,7 @@
   }
 
   .step-title {
-    @apply block font-black;
+    @apply block text-sm font-black;
   }
 
   .step-meta {
@@ -113,11 +113,11 @@
   }
 
   .privacy-stack {
-    @apply hidden gap-3 border-l border-bridge-line pl-4 xl:grid;
+    @apply hidden gap-2 border-l border-bridge-line pl-4 xl:flex xl:flex-wrap xl:justify-end;
   }
 
   .privacy-line {
-    @apply m-0 grid grid-cols-[1.1rem_1fr] items-center gap-2 text-xs text-bridge-muted;
+    @apply m-0 inline-flex items-center gap-1.5 rounded-full border border-bridge-green/10 bg-bridge-green/5 px-2.5 py-1 text-xs text-bridge-muted;
   }
 
   .privacy-line svg {
@@ -169,72 +169,69 @@
   }
 
   .visual-panel {
-    @apply relative z-10 min-h-[390px];
+    @apply relative z-10 grid min-h-[390px] content-center gap-4 lg:grid-cols-[1fr_auto_1fr];
   }
 
-  .visual-panel::before,
-  .visual-panel::after {
-    @apply absolute left-[8%] right-[4%] h-px content-[''];
-    background: linear-gradient(90deg, transparent, rgb(18 63 53 / 44%), rgb(66 107 132 / 24%), transparent);
+  .provider-flow-card,
+  .transfer-core {
+    @apply rounded-lg border border-bridge-green/15 bg-bridge-panel/92 p-4 shadow-bridge-card backdrop-blur-xl;
   }
 
-  .visual-panel::before {
-    @apply top-[42%];
-    transform: rotate(8deg);
+  .provider-flow-card {
+    @apply grid gap-4 self-center;
   }
 
-  .visual-panel::after {
-    @apply top-[58%];
-    transform: rotate(-8deg);
+  .provider-flow-card strong,
+  .transfer-core strong {
+    @apply text-base font-black leading-snug text-bridge-ink;
   }
 
-  .provider-node,
-  .bridge-core,
-  .future-connectors {
-    @apply absolute rounded-lg border border-bridge-green/15 bg-bridge-panel/90 shadow-bridge-card backdrop-blur-xl;
+  .flow-label {
+    @apply text-xs font-black uppercase text-bridge-green;
   }
 
-  .provider-node {
-    @apply grid w-[min(220px,44%)] gap-1.5 p-4;
+  .provider-logo-grid {
+    @apply grid gap-2;
   }
 
-  .provider-node span,
-  .provider-node em,
-  .bridge-core span {
+  .provider-logo-chip {
+    @apply flex min-h-14 items-center gap-3 rounded-lg border border-bridge-line bg-white/80 px-3 py-2 text-sm font-black text-bridge-ink transition;
+  }
+
+  .provider-logo-chip.is-active {
+    @apply border-bridge-green/30 bg-bridge-green/5 text-bridge-green;
+  }
+
+  .provider-logo-chip img {
+    @apply size-9 shrink-0 rounded-md object-contain;
+  }
+
+  .transfer-core {
+    @apply grid min-w-[190px] justify-items-center gap-2 self-center px-5 py-6 text-center text-bridge-green;
+  }
+
+  .transfer-core svg {
+    @apply box-content rounded-full bg-bridge-green p-2.5 text-white;
+  }
+
+  .transfer-core em {
     @apply text-xs not-italic text-bridge-muted;
   }
 
-  .provider-node strong {
-    @apply font-bridge-serif text-3xl font-medium leading-none text-bridge-green;
-  }
-
-  .source-node {
-    @apply left-2 top-8;
-  }
-
-  .destination-node {
-    @apply right-2 top-20;
-  }
-
-  .bridge-core {
-    @apply left-[28%] top-[36%] grid w-[min(280px,48%)] gap-2 p-5 text-center text-bridge-green;
-  }
-
-  .bridge-core svg {
-    @apply mx-auto box-content rounded-full bg-bridge-green p-2.5 text-white;
-  }
-
-  .bridge-core strong {
-    @apply text-sm font-black uppercase;
-  }
-
-  .future-connectors {
-    @apply bottom-0 right-2 grid w-[min(310px,60%)] grid-cols-2 gap-2 p-4;
-  }
-
-  .future-connectors span,
   .provider-future span {
     @apply inline-flex min-h-9 items-center justify-center rounded-full border border-bridge-green/15 bg-bridge-green/5 px-3 text-xs font-black text-bridge-green;
+  }
+
+  .provider-mini-chip {
+    @apply gap-2;
+  }
+
+  .provider-mini-chip img {
+    @apply size-5 rounded-sm object-contain;
+  }
+
+  .provider-mini-placeholder {
+    @apply text-bridge-muted;
   }
 
   .section-grid {
@@ -247,7 +244,7 @@
   }
 
   .surface {
-    @apply p-5 md:p-8;
+    @apply p-6 md:p-9;
   }
 
   .panel {
@@ -263,10 +260,10 @@
   }
 
   .dropzone {
-    @apply grid min-h-[280px] rounded-lg border border-dashed border-bridge-green/25 bg-[#f5f8f3] p-5 transition md:p-8;
+    @apply grid min-h-[300px] rounded-lg border border-dashed border-bridge-green/25 bg-[#f5f8f3] p-6 transition md:p-10;
     background:
-      linear-gradient(120deg, rgb(222 236 228 / 88%), rgb(255 253 248 / 92%)),
-      repeating-radial-gradient(ellipse at 0% 100%, rgb(18 63 53 / 5%) 0 1px, transparent 1px 18px);
+      linear-gradient(135deg, rgb(226 238 231 / 88%), rgb(255 253 248 / 96%) 62%),
+      radial-gradient(circle at 92% 18%, rgb(18 63 53 / 8%), transparent 18rem);
   }
 
   .dropzone.is-dragging {
@@ -274,15 +271,23 @@
   }
 
   .dropzone-inner {
-    @apply my-auto grid max-w-3xl items-center gap-5 text-left md:grid-cols-[4.5rem_1fr];
+    @apply my-auto grid max-w-4xl items-start gap-6 text-left md:grid-cols-[4.5rem_minmax(0,1fr)] md:gap-8;
   }
 
   .dropzone-icon {
-    @apply grid size-16 place-items-center rounded-lg border border-bridge-green/15 bg-white text-bridge-green shadow-sm;
+    @apply grid size-16 place-items-center rounded-lg border border-bridge-green/15 bg-white text-bridge-green shadow-sm md:mt-2;
+  }
+
+  .dropzone-copy {
+    @apply min-w-0;
+  }
+
+  .dropzone-kicker {
+    @apply m-0 mb-2 text-xs font-black uppercase text-bridge-green-2;
   }
 
   .dropzone h2 {
-    @apply m-0 font-bridge-serif text-[clamp(2rem,4vw,3.6rem)] font-medium leading-none;
+    @apply m-0 max-w-4xl font-bridge-serif text-[clamp(2.25rem,4.2vw,4.5rem)] font-medium leading-[0.95];
   }
 
   .dropzone p,
@@ -291,7 +296,7 @@
   }
 
   .dropzone p {
-    @apply my-4 max-w-xl leading-7;
+    @apply my-5 max-w-2xl text-base leading-7 md:text-lg;
   }
 
   .hidden-input {
@@ -320,11 +325,11 @@
   }
 
   .stat-grid {
-    @apply grid grid-cols-2 gap-3 xl:grid-cols-4;
+    @apply mt-7 grid grid-cols-2 gap-4 xl:grid-cols-4;
   }
 
   .stat-card {
-    @apply min-w-0 rounded-lg border border-bridge-line bg-white/70 p-4;
+    @apply min-w-0 rounded-lg border border-bridge-line bg-white/70 p-5;
   }
 
   .stat-card strong {
@@ -336,7 +341,7 @@
   }
 
   .toolbar {
-    @apply justify-between;
+    @apply justify-between gap-5;
   }
 
   .segmented {
@@ -351,8 +356,32 @@
     @apply bg-white text-bridge-green shadow-sm;
   }
 
+  .review-browser {
+    @apply mt-7;
+  }
+
+  .review-heading {
+    @apply flex flex-wrap items-end justify-between gap-3 rounded-lg border border-bridge-line bg-white/65 p-4;
+  }
+
+  .review-heading h3 {
+    @apply m-0 font-bridge-serif text-3xl font-medium leading-none text-bridge-green;
+  }
+
+  .review-heading p {
+    @apply m-0 text-sm text-bridge-muted;
+  }
+
+  .eyebrow {
+    @apply mb-1 text-xs font-black uppercase text-bridge-green-2;
+  }
+
   .table-wrap {
-    @apply overflow-auto rounded-lg border border-bridge-line;
+    @apply mt-7 overflow-auto rounded-lg border border-bridge-line;
+  }
+
+  .review-browser .table-wrap {
+    @apply mt-4;
   }
 
   table {
@@ -372,8 +401,52 @@
     @apply border-b-0;
   }
 
+  .show-row td {
+    @apply bg-white/80 align-middle;
+  }
+
+  .show-toggle {
+    @apply flex w-full items-center gap-3 bg-transparent p-0 text-left text-bridge-ink;
+  }
+
+  .show-toggle-icon {
+    @apply shrink-0 text-bridge-green transition-transform;
+  }
+
+  .show-toggle-icon.is-open {
+    @apply rotate-180;
+  }
+
+  .show-copy {
+    @apply grid min-w-0 gap-1;
+  }
+
+  .show-toggle strong {
+    @apply block truncate font-black leading-5;
+  }
+
+  .show-stats {
+    @apply block text-xs leading-4 text-bridge-muted;
+  }
+
+  .episode-detail-row td {
+    @apply bg-[#fbf8f1] p-0;
+  }
+
+  .episode-list {
+    @apply grid gap-2 p-3;
+  }
+
+  .episode-row {
+    @apply grid grid-cols-[minmax(8rem,1fr)_10rem_minmax(10rem,1fr)_7rem] items-center gap-3 rounded-md border border-bridge-line/70 bg-white/85 px-3 py-2 text-sm;
+  }
+
+  .episode-title {
+    @apply font-black text-bridge-green;
+  }
+
   .badge {
-    @apply inline-flex min-h-6 items-center rounded-full border border-bridge-line bg-[#f1ece2] px-2.5 text-xs font-black text-[#455149];
+    @apply inline-grid h-6 min-w-16 place-items-center rounded-full border border-bridge-line bg-[#f1ece2] px-2.5 text-center text-xs font-black leading-none text-[#455149];
   }
 
   .badge-success {
@@ -386,6 +459,30 @@
 
   .badge-error {
     @apply border-red-700/20 bg-red-700/10 text-red-700;
+  }
+
+  .pagination {
+    @apply mt-4 grid gap-3 rounded-lg border border-bridge-line bg-white/70 p-2 text-sm text-bridge-muted shadow-sm md:grid-cols-[auto_1fr_auto_auto] md:items-center;
+  }
+
+  .page-btn {
+    @apply inline-flex min-h-10 items-center justify-center gap-1.5 rounded-md border border-bridge-line bg-white px-4 font-black text-bridge-green transition hover:border-bridge-green/25 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:border-bridge-line disabled:hover:shadow-none;
+  }
+
+  .page-track {
+    @apply flex flex-wrap items-center justify-center gap-1;
+  }
+
+  .page-number {
+    @apply grid size-9 place-items-center rounded-md border border-transparent bg-transparent text-sm font-black text-bridge-muted transition hover:border-bridge-green/20 hover:bg-white;
+  }
+
+  .page-number.is-active {
+    @apply border-bridge-green bg-bridge-green text-white shadow-sm;
+  }
+
+  .page-summary {
+    @apply m-0 text-center text-xs font-black text-bridge-muted md:text-right;
   }
 
   .checklist {
@@ -443,8 +540,12 @@
     @apply grid grid-cols-[5.5rem_1fr] gap-2 rounded-lg border border-bridge-line bg-white/70 p-3 text-sm;
   }
 
+  .log-line .badge {
+    @apply self-center justify-self-start;
+  }
+
   .empty-state {
-    @apply grid min-h-44 place-items-center text-center text-bridge-muted;
+    @apply mt-8 grid min-h-52 place-items-center text-center text-bridge-muted;
   }
 }
 
@@ -475,22 +576,7 @@
   }
 
   .visual-panel {
-    @apply min-h-[330px];
-  }
-
-  .provider-node,
-  .bridge-core,
-  .future-connectors {
-    @apply relative inset-auto mt-3 w-full;
-  }
-
-  .visual-panel::before,
-  .visual-panel::after {
-    @apply hidden;
-  }
-
-  .future-connectors {
-    @apply grid-cols-2;
+    @apply min-h-[330px] content-start;
   }
 
   .button-row,
@@ -505,20 +591,20 @@
 
 @media (max-width: 480px) {
   .stat-grid,
-  .future-connectors {
+  .provider-logo-grid {
     @apply grid-cols-1;
   }
 
   .step-list {
-    @apply grid-cols-3;
+    @apply grid grid-cols-3 gap-2;
   }
 
   .step-item {
-    @apply min-h-12 grid-cols-1 justify-items-center gap-1 px-1 text-center;
+    @apply min-h-9 justify-center gap-1 text-center;
   }
 
   .step-index {
-    @apply size-7;
+    @apply text-[0.7rem];
   }
 
   .step-title {

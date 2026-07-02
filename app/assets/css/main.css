@@ -344,6 +344,14 @@
     @apply justify-between gap-5;
   }
 
+  .toolbar-actions {
+    @apply grid justify-items-end gap-2;
+  }
+
+  .action-hint {
+    @apply m-0 max-w-sm text-right text-xs leading-5 text-bridge-muted;
+  }
+
   .segmented {
     @apply inline-flex rounded-lg border border-bridge-line bg-[#f1ece2] p-1;
   }
@@ -619,6 +627,14 @@
   .hero-actions,
   .toolbar {
     @apply flex-col;
+  }
+
+  .toolbar-actions {
+    @apply w-full justify-items-stretch;
+  }
+
+  .action-hint {
+    @apply max-w-none text-left;
   }
 
   .btn,

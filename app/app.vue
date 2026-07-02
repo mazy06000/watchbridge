@@ -237,7 +237,8 @@
                 {{ mode.label }}
               </button>
             </div>
-            <div class="button-row">
+            <div class="toolbar-actions">
+              <div class="button-row">
               <button
                 class="btn"
                 type="button"
@@ -250,12 +251,18 @@
               <button
                 class="btn btn-primary"
                 type="button"
-                :disabled="!canImport"
-                @click="importMatchedOperations"
+                :disabled="!canUseImportAction"
+                :title="importActionDisabledReason"
+                @click="handleImportAction"
               >
-                <Play :size="18" />
-                {{ isImporting ? 'Importing' : 'Import matched' }}
+                <KeyRound v-if="importActionMode === 'connect'" :size="18" />
+                <Play v-else :size="18" />
+                {{ importActionLabel }}
               </button>
+              </div>
+              <p v-if="importActionHint" class="action-hint">
+                {{ importActionHint }}
+              </p>
             </div>
           </div>
 
@@ -662,6 +669,54 @@ const matchedOperationCount = computed(() => buildProviderOperations().length)
 const canImport = computed(() =>
   Boolean(accessToken.value && !isMatching.value && !isImporting.value && matchedOperationCount.value > 0)
 )
+const importActionMode = computed<'connect' | 'import'>(() =>
+  !accessToken.value && matchedOperationCount.value > 0 ? 'connect' : 'import'
+)
+const importActionLabel = computed(() => {
+  if (isImporting.value) {
+    return 'Importing'
+  }
+  if (isAuthPopupOpen.value && importActionMode.value === 'connect') {
+    return 'Connecting'
+  }
+  return importActionMode.value === 'connect' ? 'Connect BetaSeries' : 'Import matched'
+})
+const importActionDisabledReason = computed(() => {
+  if (!library.value) {
+    return 'Load a TV Time export first.'
+  }
+  if (isMatching.value) {
+    return 'Wait for matching to finish.'
+  }
+  if (isImporting.value) {
+    return 'Import is already running.'
+  }
+  if (matchedOperationCount.value === 0) {
+    return 'Run Match first. Only matched items can be imported.'
+  }
+  if (!accessToken.value) {
+    if (!provider.value?.configured) {
+      return providerStatus.value
+    }
+    if (isAuthPopupOpen.value) {
+      return 'Finish the BetaSeries popup.'
+    }
+    return 'Connect BetaSeries to enable import.'
+  }
+  return ''
+})
+const canUseImportAction = computed(() => {
+  if (!library.value || isMatching.value || isImporting.value || matchedOperationCount.value === 0) {
+    return false
+  }
+  if (accessToken.value) {
+    return true
+  }
+  return Boolean(provider.value?.configured && !isAuthPopupOpen.value)
+})
+const importActionHint = computed(() =>
+  canUseImportAction.value ? '' : importActionDisabledReason.value
+)
 
 const episodeGroups = computed<EpisodePreviewGroup[]>(() => {
   if (!library.value) {
@@ -897,6 +952,17 @@ function handleFileInput(event: Event): void {
 function handleDrop(event: DragEvent): void {
   isDragging.value = false
   void parseFile(event.dataTransfer?.files?.[0])
+}
+
+function handleImportAction(): void {
+  if (!canUseImportAction.value) {
+    return
+  }
+  if (!accessToken.value) {
+    connectProvider()
+    return
+  }
+  void importMatchedOperations()
 }
 
 async function parseFile(file: File | undefined): Promise<void> {

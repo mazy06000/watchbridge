@@ -501,6 +501,17 @@ interface LogLine {
   badgeClass: string
 }
 
+interface AuthMessage {
+  type?: string
+  provider?: string
+  accessToken?: string
+  error?: string
+}
+
+type AuthPopupWindow = Window & {
+  __WATCHBRIDGE_AUTH_RESULT__?: AuthMessage
+}
+
 interface ProvidersResponse {
   providers: ProviderDescriptor[]
 }
@@ -561,6 +572,7 @@ const movieMatches = ref<ProviderMovieMatch[]>([])
 const importResults = ref<ImportResultLine[]>([])
 const logLines = ref<LogLine[]>([])
 const expandedEpisodeGroupIds = ref<Set<string>>(new Set())
+let authPopupPollTimer: ReturnType<typeof setInterval> | undefined
 
 const provider = computed(() => providers.value.find((item) => item.id === selectedProviderId.value))
 const providerCapabilities = computed(() => provider.value?.capabilities ?? fallbackCapabilities)
@@ -802,6 +814,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('message', handleAuthMessage)
+  clearAuthPopupWatch()
 })
 
 function setPreviewMode(mode: PreviewMode): void {
@@ -852,11 +865,16 @@ function handleAuthMessage(event: MessageEvent): void {
     return
   }
 
-  const data = event.data as { type?: string, provider?: string, accessToken?: string, error?: string }
+  const data = event.data as AuthMessage
   if (data.type !== 'watchbridge:provider-auth' || data.provider !== 'betaseries') {
     return
   }
 
+  completeProviderAuth(data)
+}
+
+function completeProviderAuth(data: AuthMessage): void {
+  clearAuthPopupWatch()
   isAuthPopupOpen.value = false
   if (data.error) {
     pushLog('failed', data.error)
@@ -907,6 +925,7 @@ async function parseFile(file: File | undefined): Promise<void> {
 }
 
 function connectProvider(): void {
+  clearAuthPopupWatch()
   isAuthPopupOpen.value = true
   const popup = window.open(
     '/api/providers/betaseries/auth',
@@ -917,12 +936,48 @@ function connectProvider(): void {
   if (!popup) {
     isAuthPopupOpen.value = false
     pushLog('failed', 'Popup was blocked.')
+    return
   }
+
+  watchAuthPopup(popup as AuthPopupWindow)
 }
 
 function disconnectProvider(): void {
+  clearAuthPopupWatch()
   accessToken.value = ''
   pushLog('success', 'Provider disconnected.')
+}
+
+function watchAuthPopup(popup: AuthPopupWindow): void {
+  authPopupPollTimer = setInterval(() => {
+    if (popup.closed) {
+      clearAuthPopupWatch()
+      isAuthPopupOpen.value = false
+      return
+    }
+
+    try {
+      const result = popup.__WATCHBRIDGE_AUTH_RESULT__
+      if (result?.type === 'watchbridge:provider-auth' && result.provider === 'betaseries') {
+        try {
+          popup.close()
+        } catch {
+          // The popup may already be closing.
+        }
+        completeProviderAuth(result)
+      }
+    } catch {
+      // Cross-origin while the popup is still on BetaSeries.
+    }
+  }, 250)
+}
+
+function clearAuthPopupWatch(): void {
+  if (!authPopupPollTimer) {
+    return
+  }
+  clearInterval(authPopupPollTimer)
+  authPopupPollTimer = undefined
 }
 
 function handleProviderLogoError(event: Event): void {

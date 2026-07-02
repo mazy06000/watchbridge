@@ -87,8 +87,9 @@ p{margin:0;line-height:1.6;color:#455149}
 <p>${escapeHtml(statusMessage)}</p>
 </main>
 <script>
+window.__WATCHBRIDGE_AUTH_RESULT__ = ${payload};
 window.opener && window.opener.postMessage(${payload}, ${JSON.stringify(input.origin)});
-${input.token ? 'setTimeout(() => window.close(), 300);' : ''}
+${input.token ? 'setTimeout(() => window.close(), 2500);' : ''}
 </script>
 </body>
 </html>`

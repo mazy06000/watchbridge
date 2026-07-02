@@ -1,17 +1,17 @@
 <template>
-  <div class="app-shell">
-    <div class="workspace">
+  <div class="app-shell min-h-screen selection:bg-[#153f35] selection:text-white">
+    <div class="workspace mx-auto">
       <aside class="rail" aria-label="Migration state">
         <div class="brand">
           <div class="brand-mark" aria-hidden="true">
-            <ArrowLeftRight :size="22" />
+            <img src="/images/logo.png" alt="">
           </div>
           <div>
             <h1 class="brand-title">
               WatchBridge
             </h1>
             <p class="brand-subtitle">
-              Media transfer bridge
+              Tracking history transfer
             </p>
           </div>
         </div>
@@ -54,13 +54,13 @@
           <div class="hero-copy">
             <div>
               <p class="hero-kicker">
-                Private media migration
+                Private watch-history portability
               </p>
               <h2 class="hero-title">
-                Move watch history without storing the export.
+                Move your watch history without losing the plot.
               </h2>
               <p class="hero-subtitle">
-                Normalize watch history locally, match titles against the destination provider, then transfer only the selected operations in small server-side batches.
+                WatchBridge turns exports from tracking apps into a reviewed, provider-neutral transfer plan. Your ZIP is parsed in your browser, matches stay visible, and nothing is stored by the app.
               </p>
             </div>
             <div class="hero-actions">
@@ -87,23 +87,30 @@
             </div>
           </div>
 
-          <div class="visual-panel" aria-label="Current import totals">
-            <span class="flow-line" />
-            <span class="flow-line" />
-            <span class="flow-line" />
-            <div class="visual-stats">
-              <div class="visual-stat">
-                <strong>{{ summary.watchedEpisodes }}</strong>
-                <span>episodes</span>
-              </div>
-              <div class="visual-stat">
-                <strong>{{ summary.watchedMovies }}</strong>
-                <span>watched movies</span>
-              </div>
-              <div class="visual-stat">
-                <strong>{{ transferPlan?.counts.total ?? 0 }}</strong>
-                <span>operations</span>
-              </div>
+          <div class="visual-panel" aria-label="Tracking provider transfer illustration">
+            <div class="provider-node source-node">
+              <span>Your tracking history</span>
+              <strong>TV Time</strong>
+              <em>GDPR export</em>
+            </div>
+
+            <div class="bridge-core">
+              <LockKeyhole :size="20" />
+              <strong>Normalized library</strong>
+              <span>{{ transferPlan?.counts.total ?? 0 }} operations ready</span>
+            </div>
+
+            <div class="provider-node destination-node">
+              <span>Your new home</span>
+              <strong>BetaSeries</strong>
+              <em>First connector</em>
+            </div>
+
+            <div class="future-connectors" aria-label="Future tracking providers">
+              <span>Trakt</span>
+              <span>Serializd</span>
+              <span>Simkl</span>
+              <span>Letterboxd</span>
             </div>
           </div>
         </section>
@@ -154,6 +161,14 @@
                   </option>
                 </select>
               </label>
+
+              <div class="provider-future" aria-label="Future destination providers">
+                <span>Trakt</span>
+                <span>Serializd</span>
+                <span>Simkl</span>
+                <span>Letterboxd</span>
+                <span>More soon</span>
+              </div>
 
               <div class="alert" :class="{ 'alert-error': provider && !provider.configured }">
                 <Cloud :size="18" />
@@ -241,7 +256,7 @@
             </div>
           </div>
 
-          <div v-if="isMatching || isImporting" style="margin-top: 16px">
+          <div v-if="isMatching || isImporting" class="mt-4">
             <div class="progress" aria-label="Progress">
               <span :style="{ width: `${Math.round(progress * 100)}%` }" />
             </div>
@@ -251,7 +266,7 @@
             <p>No export loaded.</p>
           </div>
 
-          <div v-else class="table-wrap" style="margin-top: 16px">
+          <div v-else class="table-wrap mt-4">
             <table>
               <thead>
                 <tr>
@@ -295,6 +310,9 @@
             <h3 class="panel-title">
               Safety Gates
             </h3>
+            <p class="panel-note">
+              WatchBridge moves tracking history, not streaming accounts or subscriptions.
+            </p>
             <ul class="checklist">
               <li>
                 <CheckCircle2 :size="17" />
@@ -323,7 +341,6 @@
 <script setup lang="ts">
 import {
   Archive,
-  ArrowLeftRight,
   CheckCircle2,
   Cloud,
   Database,

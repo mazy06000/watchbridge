@@ -1,4 +1,4 @@
-# Transver
+# WatchBridge
 
 Private TV show and movie transfer between media-tracking services, built with Nuxt and Cloudflare Pages.
 
@@ -17,7 +17,7 @@ The first supported path is TV Time GDPR export to BetaSeries. The product direc
 
 ## Provider Direction
 
-Transver is designed around a normalized library model:
+WatchBridge is designed around a normalized library model:
 
 ```txt
 source provider/export -> normalized library -> transfer plan -> destination provider
@@ -77,10 +77,10 @@ npm run build
 
 The project builds to `dist` with the Nitro `cloudflare_pages` preset.
 
-Current Pages project:
+Suggested Pages project:
 
-- Project: `transver`
-- Production URL: `https://transver.pages.dev`
+- Project: `watchbridge`
+- Production URL: `https://watchbridge.pages.dev`
 
 Cloudflare Pages settings:
 
@@ -98,21 +98,21 @@ npm run deploy
 Production secrets for the first BetaSeries connector:
 
 ```bash
-wrangler pages secret put NUXT_BETASERIES_API_KEY --project-name transver
-wrangler pages secret put NUXT_BETASERIES_CLIENT_SECRET --project-name transver
-wrangler pages secret put NUXT_OAUTH_STATE_SECRET --project-name transver
+wrangler pages secret put NUXT_BETASERIES_API_KEY --project-name watchbridge
+wrangler pages secret put NUXT_BETASERIES_CLIENT_SECRET --project-name watchbridge
+wrangler pages secret put NUXT_OAUTH_STATE_SECRET --project-name watchbridge
 ```
 
 The OAuth callback URL to register in the BetaSeries developer app is:
 
 ```txt
-https://transver.pages.dev/api/providers/betaseries/callback
+https://watchbridge.pages.dev/api/providers/betaseries/callback
 ```
 
 Readiness endpoint:
 
 ```txt
-https://transver.pages.dev/api/readiness
+https://watchbridge.pages.dev/api/readiness
 ```
 
 It reports only configuration key names and capability flags. It does not return secret values or user data.

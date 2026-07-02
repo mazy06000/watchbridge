@@ -1,10 +1,10 @@
 {
-  "name": "transver",
+  "name": "watchbridge",
   "type": "module",
   "private": true,
   "scripts": {
     "build": "nuxt build",
-    "deploy": "npm run build && wrangler pages deploy dist --project-name transver --branch main",
+    "deploy": "npm run build && wrangler pages deploy dist --project-name watchbridge --branch main",
     "dev": "nuxt dev --host 0.0.0.0",
     "lint": "eslint .",
     "postinstall": "nuxt prepare",

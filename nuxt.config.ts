@@ -24,7 +24,7 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: 'Transver',
+      title: 'WatchBridge',
       meta: [
         {
           name: 'description',

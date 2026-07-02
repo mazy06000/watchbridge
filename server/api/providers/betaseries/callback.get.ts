@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
 
 function callbackHtml(input: { origin: string, token?: string, error?: string }): string {
   const payload = JSON.stringify({
-    type: 'transver:provider-auth',
+    type: 'watchbridge:provider-auth',
     provider: 'betaseries',
     accessToken: input.token,
     error: input.error

@@ -1,6 +1,6 @@
 # Security
 
-Transver is designed to avoid retaining user media data.
+WatchBridge is designed to avoid retaining user media data.
 
 ## Data Handling
 

@@ -8,7 +8,7 @@
           </div>
           <div>
             <h1 class="brand-title">
-              Transver
+              WatchBridge
             </h1>
             <p class="brand-subtitle">
               Media transfer bridge
@@ -564,7 +564,7 @@ function handleAuthMessage(event: MessageEvent): void {
   }
 
   const data = event.data as { type?: string, provider?: string, accessToken?: string, error?: string }
-  if (data.type !== 'transver:provider-auth' || data.provider !== 'betaseries') {
+  if (data.type !== 'watchbridge:provider-auth' || data.provider !== 'betaseries') {
     return
   }
 

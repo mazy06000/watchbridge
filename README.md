@@ -1,49 +1,35 @@
-# WatchBridge
+# SagaLog
 
-Private TV show and movie transfer between media-tracking services, built with Nuxt and Cloudflare Pages.
+SagaLog is a private tracking app and provider bridge for shows, movies, and books. It starts as a personal Trakt/TV Time-style tracker, expands into reading progress, and keeps import/provider-transfer work as onboarding features.
 
-The first supported path is TV Time GDPR export to BetaSeries. The product direction is broader: every provider should be able to become a source, a destination, or both when its API/export format allows it.
+The first supported import path is TV Time GDPR ZIP into SagaLog. The first external transfer destination remains BetaSeries. The architecture stays provider-agnostic so future connectors can be sources, destinations, or both.
 
 ## What It Does
 
-- Normalizes watch-history and list data into provider-neutral TV show and movie objects.
-- Current source connector: parses the TV Time GDPR ZIP in the browser.
-- Current destination connector: imports matched items into BetaSeries.
-- Reads only the TV Time files needed for transfer: `tracking-prod-records-v2.csv`, `user_tv_show_data.csv`, and `tracking-prod-records.csv`.
-- Ignores sensitive export files such as tokens, IP addresses, devices, login records, and social data.
-- Matches media against the selected destination provider through server routes that keep provider API secrets private.
-- Imports matched items in small batches without writing user data to D1, KV, R2, logs, or a database.
-- Keeps provider-specific behavior inside provider adapters.
-
-## Provider Direction
-
-WatchBridge is designed around a normalized library model:
-
-```txt
-source provider/export -> normalized library -> transfer plan -> destination provider
-```
-
-Today, the only implemented source is TV Time GDPR export and the only implemented destination is BetaSeries. Future connectors can support one or both directions:
-
-- source-only: read an export or API and normalize it;
-- destination-only: match and import normalized media;
-- bidirectional: both read from and write to the same provider.
-
-BetaSeries-specific rules currently live in its adapter: watched episodes are marked with `bulk=false` to avoid backfilling unwatched previous episodes, watched movies map to `seen`, and movie list/follow rows map to `to see`.
+- Tracks private user libraries in Cloudflare D1.
+- Searches and caches catalog metadata from TMDB.
+- Uses TMDB `next_episode_to_air` and TVMaze fallback data for upcoming TV episode dates.
+- Shows upcoming movie release dates when TMDB marks a movie as unreleased.
+- Searches and caches book metadata from Open Library, with optional Google Books fallback.
+- Tracks reading shelves, current page, total pages, reading percentage, and reading sessions.
+- Parses TV Time GDPR ZIP files in the browser before normalized history is sent to the signed-in user's account.
+- Keeps BetaSeries OAuth and transfer flows as a secondary provider bridge.
+- Ships as an installable PWA with API responses excluded from service-worker caching.
 
 ## Architecture
 
-The app uses a small ports/adapters design:
+The app follows a small DDD/VSA shape:
 
-- `core/domain`: normalized media and migration language.
-- `core/application`: provider-aware transfer-plan rules.
-- `core/ports`: provider contracts for matching and imports.
-- `infra/sources`: source readers, currently the TV Time GDPR ZIP reader.
+- `core/domain`: provider-neutral media, tracker, and migration language.
+- `core/application`: use cases for catalog, library import, and provider transfer.
+- `core/ports`: contracts for catalog providers, tracker repositories, and media providers.
+- `server/utils/tmdb-catalog-provider.ts`: TMDB catalog adapter with TVMaze timing fallback.
+- `server/utils/book-catalog-provider.ts`: Open Library book catalog adapter with Google Books fallback.
+- `server/utils/book-repository.ts`: D1-backed reading repository with an in-memory dev fallback.
+- `server/utils/tracker-repository.ts`: D1-backed tracker repository with an in-memory dev fallback.
 - `server/utils/betaseries-*`: first destination provider adapter.
-- `server/api/providers/*`: OAuth, matching, import, and provider discovery routes for destination connectors.
-- `app/app.vue`: vertical-slice UI for import, match, transfer, and progress.
-
-Adding a destination provider should mean implementing the provider port and adding server routes for its OAuth/import flow. Adding a source provider should mean implementing a reader that returns the same normalized library shape used by the rest of the app.
+- `server/api/*`: thin Nuxt server routes that call use cases.
+- `app/app.vue`: tracker dashboard, search, library, import, and provider transfer UI.
 
 ## Local Setup
 
@@ -53,23 +39,52 @@ cp .env.example .env
 npm run dev
 ```
 
-Required environment variables:
+Important environment variables:
 
 ```bash
+NUXT_TMDB_ACCESS_TOKEN=
+NUXT_TMDB_API_KEY=
+NUXT_GOOGLE_BOOKS_API_KEY=
+NUXT_AUTH_SECRET=
+NUXT_RESEND_API_KEY=
+NUXT_EMAIL_FROM=SagaLog <noreply@watchbridge.org>
 NUXT_BETASERIES_API_KEY=
 NUXT_BETASERIES_CLIENT_SECRET=
 NUXT_OAUTH_STATE_SECRET=
 NUXT_PUBLIC_APP_BASE_URL=http://localhost:3000
+WATCHBRIDGE_USE_D1_DEV=0
 ```
 
-`NUXT_OAUTH_STATE_SECRET` must be at least 24 characters.
+Use `NUXT_TMDB_ACCESS_TOKEN` for TMDB's v4 read access token. `NUXT_TMDB_API_KEY` is a fallback for TMDB v3 API-key auth.
+
+Open Library does not require a key. `NUXT_GOOGLE_BOOKS_API_KEY` is optional and is only used when Open Library returns no book results.
+
+`NUXT_AUTH_SECRET` and `NUXT_OAUTH_STATE_SECRET` should each be at least 24 characters.
+
+## Cloudflare D1
+
+`wrangler.toml` expects a D1 binding named `DB`:
+
+```toml
+[[d1_databases]]
+binding = "DB"
+database_name = "watchbridge"
+database_id = "<cloudflare-d1-database-id>"
+migrations_dir = "migrations"
+```
+
+Create the database in Cloudflare, replace `database_id`, then apply migrations:
+
+```bash
+npx wrangler d1 migrations apply watchbridge --local
+npx wrangler d1 migrations apply watchbridge --remote
+```
 
 ## Checks
 
 ```bash
 npm run test
 npm run typecheck
-npm run lint
 npm run build
 ```
 
@@ -77,17 +92,14 @@ npm run build
 
 The project builds to `dist` with the Nitro `cloudflare_pages` preset.
 
-Suggested Pages project:
-
-- Project: `watchbridge`
-- Production URL: `https://watchbridge.org`
-
-Cloudflare Pages settings:
+Pages settings:
 
 - Build command: `npm run build`
 - Build output directory: `dist`
 - Compatibility date: `2026-06-25`
-- Environment variables: the same `NUXT_*` variables listed above
+- Production URL: `https://watchbridge.org`
+
+The current Cloudflare project, D1 database, and production domain still use the original `watchbridge` identifiers until the infrastructure is migrated to a SagaLog domain.
 
 Production public base URL:
 
@@ -95,21 +107,19 @@ Production public base URL:
 NUXT_PUBLIC_APP_BASE_URL=https://watchbridge.org
 ```
 
-Direct deploy:
+Required production secrets:
 
 ```bash
-npm run deploy
-```
-
-Production secrets for the first BetaSeries connector:
-
-```bash
+wrangler pages secret put NUXT_TMDB_ACCESS_TOKEN --project-name watchbridge
+wrangler pages secret put NUXT_GOOGLE_BOOKS_API_KEY --project-name watchbridge
+wrangler pages secret put NUXT_AUTH_SECRET --project-name watchbridge
+wrangler pages secret put NUXT_RESEND_API_KEY --project-name watchbridge
 wrangler pages secret put NUXT_BETASERIES_API_KEY --project-name watchbridge
 wrangler pages secret put NUXT_BETASERIES_CLIENT_SECRET --project-name watchbridge
 wrangler pages secret put NUXT_OAUTH_STATE_SECRET --project-name watchbridge
 ```
 
-The OAuth callback URL to register in the BetaSeries developer app is:
+The BetaSeries OAuth callback URL is:
 
 ```txt
 https://watchbridge.org/api/providers/betaseries/callback
@@ -122,13 +132,3 @@ https://watchbridge.org/api/readiness
 ```
 
 It reports only configuration key names and capability flags. It does not return secret values or user data.
-
-Preview the production output locally:
-
-```bash
-npm run preview
-```
-
-## Security Model
-
-No persistent storage is configured. Source exports are parsed on the client when possible, and only normalized transfer payloads are sent to provider routes. Server API routes set `Cache-Control: no-store`; OAuth state is signed with HMAC; provider API credentials stay server-side; user provider tokens are held in browser memory for the current session.

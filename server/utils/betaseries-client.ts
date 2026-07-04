@@ -45,7 +45,7 @@ export async function betaSeriesRequest<T = unknown>(
 
   const headers = new Headers({
     accept: 'application/json',
-    'user-agent': 'WatchBridge/1.0 (+https://github.com/mazy06000/watchbridge)',
+    'user-agent': 'SagaLog/1.0 (+https://watchbridge.org)',
     'x-betaseries-key': apiKey,
     'x-betaseries-version': version
   })

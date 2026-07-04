@@ -1,6 +1,6 @@
 # Architecture
 
-WatchBridge keeps source exports, provider APIs, and transfer behavior behind explicit interfaces. The first implemented route is TV Time GDPR export to BetaSeries, but the intended model is any supported source to any supported destination.
+SagaLog keeps source exports, provider APIs, and transfer behavior behind explicit interfaces. The first implemented route is TV Time GDPR export to BetaSeries, but the intended model is any supported source to any supported destination.
 
 ```mermaid
 flowchart LR

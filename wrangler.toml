@@ -2,3 +2,9 @@ name = "watchbridge"
 pages_build_output_dir = "dist"
 compatibility_date = "2026-06-25"
 compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "watchbridge"
+database_id = "<cloudflare-d1-database-id>"
+migrations_dir = "migrations"

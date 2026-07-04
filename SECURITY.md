@@ -1,6 +1,6 @@
 # Security
 
-WatchBridge is designed to avoid retaining user media data.
+SagaLog is designed to avoid retaining unnecessary user media data.
 
 ## Data Handling
 

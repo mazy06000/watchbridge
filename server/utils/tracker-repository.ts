@@ -483,7 +483,7 @@ class D1TrackerRepository implements AuthRepository, TrackerRepository {
     }
 
     for (const movie of input.library.watchedMovies) {
-      const title = titleFromMovie(movie.title, movie.source.movieId ?? movie.id, movie.releaseDate)
+      const title = titleFromMovie(movie.title, movie.source.movieId ?? movie.id, movie.releaseDate, movie.source)
       await this.upsertLibraryItem({ userId: input.userId, title, status: 'completed' })
       await this.addWatchEvent({
         userId: input.userId,
@@ -496,7 +496,7 @@ class D1TrackerRepository implements AuthRepository, TrackerRepository {
     }
 
     for (const movie of input.library.movieList) {
-      const title = titleFromMovie(movie.title, movie.source.movieId ?? movie.id, movie.releaseDate)
+      const title = titleFromMovie(movie.title, movie.source.movieId ?? movie.id, movie.releaseDate, movie.source)
       await this.upsertLibraryItem({ userId: input.userId, title, status: 'watchlist' })
       importedItems += 1
     }
@@ -751,7 +751,7 @@ class MemoryTrackerRepository implements AuthRepository, TrackerRepository {
     for (const movie of input.library.watchedMovies) {
       await this.upsertLibraryItem({
         userId: input.userId,
-        title: titleFromMovie(movie.title, movie.source.movieId ?? movie.id, movie.releaseDate),
+        title: titleFromMovie(movie.title, movie.source.movieId ?? movie.id, movie.releaseDate, movie.source),
         status: 'completed'
       })
       importedItems += 1
@@ -760,7 +760,7 @@ class MemoryTrackerRepository implements AuthRepository, TrackerRepository {
     for (const movie of input.library.movieList) {
       await this.upsertLibraryItem({
         userId: input.userId,
-        title: titleFromMovie(movie.title, movie.source.movieId ?? movie.id, movie.releaseDate),
+        title: titleFromMovie(movie.title, movie.source.movieId ?? movie.id, movie.releaseDate, movie.source),
         status: 'watchlist'
       })
       importedItems += 1
@@ -886,11 +886,11 @@ function buildImportedTitles(library: NormalizedLibrary): CatalogTitle[] {
     titles.set(title.id, title)
   }
   for (const movie of library.watchedMovies) {
-    const title = titleFromMovie(movie.title, movie.source.movieId ?? movie.id, movie.releaseDate)
+    const title = titleFromMovie(movie.title, movie.source.movieId ?? movie.id, movie.releaseDate, movie.source)
     titles.set(title.id, title)
   }
   for (const movie of library.movieList) {
-    const title = titleFromMovie(movie.title, movie.source.movieId ?? movie.id, movie.releaseDate)
+    const title = titleFromMovie(movie.title, movie.source.movieId ?? movie.id, movie.releaseDate, movie.source)
     titles.set(title.id, title)
   }
   return [...titles.values()]
@@ -906,18 +906,34 @@ function titleFromShow(title: string, sourceKey: string): CatalogTitle {
     type: 'series',
     primaryTitle: title,
     genres: [],
-    sourcePayload: { source: 'tvtime-gdpr', sourceKey }
+    sourcePayload: {
+      source: 'tvtime-gdpr',
+      sourceKey,
+      tvdbId: /^\d+$/.test(sourceKey) ? sourceKey : undefined
+    }
   }
 }
 
-function titleFromMovie(title: string, sourceKey: string, releaseDate?: string): CatalogTitle {
+function titleFromMovie(
+  title: string,
+  sourceKey: string,
+  releaseDate?: string,
+  source?: { imdbId?: string, tvdbId?: string, rawKey?: string }
+): CatalogTitle {
   return {
-    id: catalogTitleId({ sourceKey: `tvtime-movie-${sourceKey}`, title }),
+    id: catalogTitleId({ imdbId: source?.imdbId, sourceKey: `tvtime-movie-${sourceKey}`, title }),
+    imdbId: source?.imdbId,
     type: 'movie',
     primaryTitle: title,
     startYear: releaseDate ? Number.parseInt(releaseDate.slice(0, 4), 10) || undefined : undefined,
     genres: [],
-    sourcePayload: { source: 'tvtime-gdpr', sourceKey }
+    sourcePayload: {
+      source: 'tvtime-gdpr',
+      sourceKey,
+      tvdbId: source?.tvdbId,
+      imdbId: source?.imdbId,
+      tvtimeUuid: source?.rawKey
+    }
   }
 }
 
@@ -927,7 +943,8 @@ function episodeFromTvTime(episode: WatchedEpisode, seriesTitleId: string): Cata
     seriesTitleId,
     seasonNumber: episode.seasonNumber,
     episodeNumber: episode.episodeNumber,
-    primaryTitle: `${episode.showTitle} S${episode.seasonNumber}E${episode.episodeNumber}`,
+    primaryTitle: episode.episodeTitle ?? `${episode.showTitle} S${episode.seasonNumber}E${episode.episodeNumber}`,
+    imdbId: episode.source.imdbId,
     runtimeSeconds: episode.runtimeMinutes ? episode.runtimeMinutes * 60 : undefined,
     fetchedAt: nowIso()
   }

@@ -8,7 +8,9 @@ const sourceIdentitySchema = z.object({
   rawKey: z.string().optional(),
   showId: z.string().optional(),
   episodeId: z.string().optional(),
-  movieId: z.string().optional()
+  movieId: z.string().optional(),
+  imdbId: z.string().optional(),
+  tvdbId: z.string().optional()
 })
 
 const librarySchema = z.object({
@@ -18,10 +20,13 @@ const librarySchema = z.object({
     id: z.string(),
     source: sourceIdentitySchema,
     showTitle: z.string(),
+    episodeTitle: z.string().optional(),
     seasonNumber: z.number(),
     episodeNumber: z.number(),
     watchedAt: z.string().optional(),
     runtimeMinutes: z.number().optional(),
+    watchedCount: z.number().optional(),
+    rewatchCount: z.number().optional(),
     isSpecial: z.boolean()
   })),
   shows: z.array(z.object({
@@ -29,6 +34,7 @@ const librarySchema = z.object({
     source: sourceIdentitySchema,
     title: z.string(),
     episodeCountSeen: z.number().optional(),
+    status: z.string().optional(),
     followed: z.boolean(),
     favorited: z.boolean(),
     archived: z.boolean()

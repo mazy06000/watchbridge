@@ -44,7 +44,12 @@ flowchart LR
 
 ## Infrastructure
 
-`infra/sources/tvtime-gdpr-reader.ts` is the first source adapter. It reads the TV Time ZIP in-browser and normalizes selected CSV rows.
+`infra/sources/tvtime-gdpr-reader.ts` is the first source adapter. It reads the TV Time ZIP in-browser and normalizes both supported export shapes:
+
+- legacy GDPR CSV files such as `tracking-prod-records-v2.csv`, `user_tv_show_data.csv`, and `tracking-prod-records.csv`
+- current JSON exports such as `tvtime-series-YYYY-MM-DD.json` and `tvtime-movies-YYYY-MM-DD.json`
+
+Current TV Time JSON exports include TVDB IDs for series, episodes, and movies, plus IMDb IDs for movies. SagaLog preserves those external IDs in the normalized library so catalog enrichment can use exact-ID lookup before falling back to title/year matching.
 
 `server/utils/betaseries-provider.ts` is the first destination provider adapter. It owns BetaSeries-specific endpoints, fields, and import parameters.
 

@@ -7,16 +7,21 @@ export interface SourceIdentity {
   showId?: string
   episodeId?: string
   movieId?: string
+  imdbId?: string
+  tvdbId?: string
 }
 
 export interface WatchedEpisode {
   id: string
   source: SourceIdentity
   showTitle: string
+  episodeTitle?: string
   seasonNumber: number
   episodeNumber: number
   watchedAt?: string
   runtimeMinutes?: number
+  watchedCount?: number
+  rewatchCount?: number
   isSpecial: boolean
 }
 
@@ -25,6 +30,7 @@ export interface ShowListItem {
   source: SourceIdentity
   title: string
   episodeCountSeen?: number
+  status?: string
   followed: boolean
   favorited: boolean
   archived: boolean
